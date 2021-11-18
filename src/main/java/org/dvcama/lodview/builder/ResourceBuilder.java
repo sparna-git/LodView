@@ -31,12 +31,15 @@ public class ResourceBuilder {
 		this.messageSource = messageSource;
 	}
 
-	public ResultBean buildHtmlResource(String IRI, Locale locale, ConfigurationBean conf, OntologyBean ontoBean) throws Exception {
+	public ResultBean buildHtmlResource(String IRI, Locale locale, ConfigurationBean conf, OntologyBean ontoBean)
+			throws Exception {
 		return buildHtmlResource(IRI, locale, conf, ontoBean, false);
 	}
 
-	public ResultBean buildHtmlResource(String IRI, Locale locale, ConfigurationBean conf, OntologyBean ontoBean, boolean localMode) throws Exception {
+	public ResultBean buildHtmlResource(String IRI, Locale locale, ConfigurationBean conf, OntologyBean ontoBean,
+			boolean localMode) throws Exception {
 		ResultBean result = new ResultBean();
+		List<String> TitlePropertiesSort = new ArrayList<String>();
 		List<String> videos = new ArrayList<String>();
 		List<String> audios = new ArrayList<String>();
 		List<String> images = new ArrayList<String>();
@@ -58,54 +61,125 @@ public class ResourceBuilder {
 			try {
 				m.read(IRI);
 			} catch (Exception e) {
-				throw new Exception(messageSource.getMessage("error.noContentNegotiation", null, "sorry but content negotiation is not supported by the IRI", locale));
+				throw new Exception(messageSource.getMessage("error.noContentNegotiation", null,
+						"sorry but content negotiation is not supported by the IRI", locale));
 			}
 			triples = se.doLocalQuery(m, IRI, conf.getDefaultQueries());
 		} else {
 			triples = se.doQuery(IRI, conf.getDefaultQueries(), null);
 		}
 		boolean betterTitleMatch = false, betterDescrMatch = false;
+
+		// Sort Title
+		List<String> confTitleProperties = conf.getTitleProperties();
+		for (String readTitleConf : confTitleProperties) {
+			for (TripleBean tripleBean : triples) {
+
+				if (tripleBean.getIRI() == null) {
+					tripleBean.setIRI(IRI);
+					tripleBean.setNsIRI(Misc.toNsResource(tripleBean.getIRI(), conf));
+				}
+				
+				if (readTitleConf == tripleBean.getProperty().getNsProperty()
+						|| conf.getTitleProperties().contains(tripleBean.getProperty().getProperty())
+								
+						){
+						result.setTitle(Misc.stripHTML(tripleBean.getValue()));
+						if(preferredLanguage.equals(tripleBean.getLang())) { betterTitleMatch = true; }
+					}
+				}
+		}
+
+		// Sort Description
+		List<String> ConfDescriptionProperties = conf.getDescriptionProperties();
+		for (String readDescriptionConf : ConfDescriptionProperties) {
+			for (TripleBean tripleBean : triples) {
+
+				if (tripleBean.getIRI() == null) {
+					tripleBean.setIRI(IRI);
+					tripleBean.setNsIRI(Misc.toNsResource(tripleBean.getIRI(), conf));
+				}
+
+				if (
+						readDescriptionConf == tripleBean.getProperty().getNsProperty()
+						|| conf.getDescriptionProperties().contains(
+								tripleBean.getProperty().getProperty())
+								
+						){
+						result.setDescriptionProperty(tripleBean.getProperty());
+						if (preferredLanguage.equals(tripleBean.getLang())) {
+							betterDescrMatch = true;
+						}					
+				}				
+			}
+		}
+		
+		
+		
+		
 		for (TripleBean tripleBean : triples) {
 
 			if (tripleBean.getIRI() == null) {
 				tripleBean.setIRI(IRI);
 				tripleBean.setNsIRI(Misc.toNsResource(tripleBean.getIRI(), conf));
 			}
+			/*
+			 * if
+			 * (conf.getTitleProperties().contains(tripleBean.getProperty().getNsProperty())
+			 * ||
+			 * conf.getTitleProperties().contains(tripleBean.getProperty().getProperty())) {
+			 * if (tripleBean.getIRI().equals(IRI) && !betterTitleMatch &&
+			 * (result.getTitle() == null || result.getTitle().trim().equals("") ||
+			 * (tripleBean.getLang() != null &&
+			 * (preferredLanguage.equals(tripleBean.getLang()) ||
+			 * tripleBean.getLang().equals("en"))))) {
+			 * result.setTitle(Misc.stripHTML(tripleBean.getValue())); if
+			 * (preferredLanguage.equals(tripleBean.getLang())) { betterTitleMatch = true; }
+			 * } } else
+			 */
 
-			if (conf.getTitleProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getTitleProperties().contains(tripleBean.getProperty().getProperty())) {
-				if (tripleBean.getIRI().equals(IRI) && !betterTitleMatch && (result.getTitle() == null || result.getTitle().trim().equals("") || (tripleBean.getLang() != null && (preferredLanguage.equals(tripleBean.getLang()) || tripleBean.getLang().equals("en"))))) {
-					result.setTitle(Misc.stripHTML(tripleBean.getValue()));
-					if (preferredLanguage.equals(tripleBean.getLang())) {
-						betterTitleMatch = true;
-					}
-				}
-			} else if (conf.getDescriptionProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getDescriptionProperties().contains(tripleBean.getProperty().getProperty())) {
-				if (tripleBean.getIRI().equals(IRI) && !betterDescrMatch && (result.getDescriptionProperty() == null || (tripleBean.getLang() != null && (preferredLanguage.equals(tripleBean.getLang()) || tripleBean.getLang().equals("en"))))) {
+			/*
+			if (conf.getDescriptionProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getDescriptionProperties().contains(tripleBean.getProperty().getProperty())) {
+				if (tripleBean.getIRI().equals(IRI) && !betterDescrMatch
+						&& (result.getDescriptionProperty() == null
+								|| (tripleBean.getLang() != null && (preferredLanguage.equals(tripleBean.getLang())
+										|| tripleBean.getLang().equals("en"))))) {
 					result.setDescriptionProperty(tripleBean.getProperty());
 					if (preferredLanguage.equals(tripleBean.getLang())) {
 						betterDescrMatch = true;
 					}
 				}
-			} else if (conf.getLatitudeProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getLatitudeProperties().contains(tripleBean.getProperty().getProperty())) {
+			} else 
+				*/
+				if (conf.getLatitudeProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getLatitudeProperties().contains(tripleBean.getProperty().getProperty())) {
 				result.setLatitude(tripleBean.getValue());
-			} else if (conf.getLongitudeProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getLongitudeProperties().contains(tripleBean.getProperty().getProperty())) {
+			} else if (conf.getLongitudeProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getLongitudeProperties().contains(tripleBean.getProperty().getProperty())) {
 				result.setLongitude(tripleBean.getValue());
-			} else if (conf.getImageProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getImageProperties().contains(tripleBean.getProperty().getProperty())) {
+			} else if (conf.getImageProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getImageProperties().contains(tripleBean.getProperty().getProperty())) {
 				images.add(tripleBean.getValue());
-			}  else if (conf.getAudioProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getAudioProperties().contains(tripleBean.getProperty().getProperty())) {
+			} else if (conf.getAudioProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getAudioProperties().contains(tripleBean.getProperty().getProperty())) {
 				audios.add(tripleBean.getValue());
-			} else if (conf.getVideoProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getVideoProperties().contains(tripleBean.getProperty().getProperty())) {
+			} else if (conf.getVideoProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getVideoProperties().contains(tripleBean.getProperty().getProperty())) {
 				videos.add(tripleBean.getValue());
-			}  else if (conf.getLinkingProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getLinkingProperties().contains(tripleBean.getProperty().getProperty())) {
+			} else if (conf.getLinkingProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getLinkingProperties().contains(tripleBean.getProperty().getProperty())) {
 				linking.add(tripleBean.getValue());
-			} else if (conf.getTypeProperties().contains(tripleBean.getProperty().getNsProperty()) || conf.getTypeProperties().contains(tripleBean.getProperty().getProperty())) {
+			} else if (conf.getTypeProperties().contains(tripleBean.getProperty().getNsProperty())
+					|| conf.getTypeProperties().contains(tripleBean.getProperty().getProperty())) {
 				result.setTypeProperty(tripleBean.getProperty());
 			}
 
 			if (tripleBean.getType().equals("iri")) {
 				tripleBean.setUrl(Misc.toBrowsableUrl(tripleBean.getValue(), conf));
 				tripleBean.setNsValue(Misc.toNsResource(tripleBean.getValue(), conf));
-				if (!tripleBean.getUrl().equals(tripleBean.getValue()) || tripleBean.getValue().startsWith(conf.getPublicUrlPrefix())) {
+				if (!tripleBean.getUrl().equals(tripleBean.getValue())
+						|| tripleBean.getValue().startsWith(conf.getPublicUrlPrefix())) {
 					tripleBean.setLocal(true);
 				}
 				result.addResource(tripleBean, tripleBean.getIRI());
@@ -134,9 +208,9 @@ public class ResourceBuilder {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		RDFWriter rdfWriter = model.getWriter(lang.getName());
-		rdfWriter.setProperty("showXMLDeclaration","true");
-		rdfWriter.setProperty("relativeURIs","");
- 
+		rdfWriter.setProperty("showXMLDeclaration", "true");
+		rdfWriter.setProperty("relativeURIs", "");
+
 		rdfWriter.write(model, baos, conf.getIRInamespace());
 
 		byte[] resultByteArray = baos.toByteArray();
@@ -155,12 +229,12 @@ public class ResourceBuilder {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		RDFWriter rdfWriter = model.getWriter(lang.getName());
-		rdfWriter.setProperty("showXMLDeclaration","true");
-		rdfWriter.setProperty("relativeURIs","");
+		rdfWriter.setProperty("showXMLDeclaration", "true");
+		rdfWriter.setProperty("relativeURIs", "");
 
 		rdfWriter.write(model, baos, conf.getIRInamespace());
-		rdfWriter.setProperty("showXMLDeclaration","true");
-		rdfWriter.setProperty("relativeURIs","");
+		rdfWriter.setProperty("showXMLDeclaration", "true");
+		rdfWriter.setProperty("relativeURIs", "");
 
 		byte[] resultByteArray = baos.toByteArray();
 		result = new String(resultByteArray);
@@ -168,7 +242,8 @@ public class ResourceBuilder {
 		return result;
 	}
 
-	public ResultBean buildPartialHtmlResource(String IRI, String[] abouts, Locale locale, ConfigurationBean conf, OntologyBean ontoBean, List<String> filterProperties) throws Exception {
+	public ResultBean buildPartialHtmlResource(String IRI, String[] abouts, Locale locale, ConfigurationBean conf,
+			OntologyBean ontoBean, List<String> filterProperties) throws Exception {
 
 		SPARQLEndPoint se = new SPARQLEndPoint(conf, ontoBean, locale.getLanguage());
 		ResultBean result = new ResultBean();
@@ -209,7 +284,8 @@ public class ResourceBuilder {
 					try {
 						m.read(about);
 					} catch (Exception e) {
-						throw new Exception(messageSource.getMessage("error.noContentNegotiation", null, "sorry but content negotiation is not supported by the IRI", locale));
+						throw new Exception(messageSource.getMessage("error.noContentNegotiation", null,
+								"sorry but content negotiation is not supported by the IRI", locale));
 					}
 					triples.addAll(se.doLocalQuery(m, about, sparqlQueries, about));
 				} else {
@@ -237,7 +313,9 @@ public class ResourceBuilder {
 			boolean betterTitleMatch = false;
 			TripleBean title = null;
 			for (TripleBean tripleBean : al) {
-				if (!betterTitleMatch && (title == null || title.getValue() == null || title.getValue().trim().equals("") || preferredLanguage.equals(tripleBean.getLang()) || tripleBean.getLang().equals("en"))) {
+				if (!betterTitleMatch && (title == null || title.getValue() == null
+						|| title.getValue().trim().equals("") || preferredLanguage.equals(tripleBean.getLang())
+						|| tripleBean.getLang().equals("en"))) {
 					title = tripleBean;
 					if (preferredLanguage.equals(tripleBean.getLang())) {
 						betterTitleMatch = true;
@@ -252,7 +330,8 @@ public class ResourceBuilder {
 		return result;
 	}
 
-	public ResultBean buildHtmlInverseResource(String IRI, String property, int start, Locale locale, ConfigurationBean conf, OntologyBean ontoBean) throws Exception {
+	public ResultBean buildHtmlInverseResource(String IRI, String property, int start, Locale locale,
+			ConfigurationBean conf, OntologyBean ontoBean) throws Exception {
 		ResultBean result = new ResultBean();
 
 		SPARQLEndPoint se = new SPARQLEndPoint(conf, ontoBean, locale.getLanguage());
@@ -271,7 +350,8 @@ public class ResourceBuilder {
 				try {
 					m.read(IRI);
 				} catch (Exception e) {
-					throw new Exception(messageSource.getMessage("error.noContentNegotiation", null, "sorry but content negotiation is not supported by the IRI", locale));
+					throw new Exception(messageSource.getMessage("error.noContentNegotiation", null,
+							"sorry but content negotiation is not supported by the IRI", locale));
 				}
 				triples = se.doLocalQuery(m, IRI, conf.getDefaultInversesCountQueries());
 			} else {
@@ -297,7 +377,8 @@ public class ResourceBuilder {
 				try {
 					m.read(IRI);
 				} catch (Exception e) {
-					throw new Exception(messageSource.getMessage("error.noContentNegotiation", null, "sorry but content negotiation is not supported by the IRI", locale));
+					throw new Exception(messageSource.getMessage("error.noContentNegotiation", null,
+							"sorry but content negotiation is not supported by the IRI", locale));
 				}
 				triples = se.doLocalQuery(m, IRI, property, start, conf.getDefaultInversesQueries(), null);
 			} else {
@@ -307,7 +388,8 @@ public class ResourceBuilder {
 			Map<String, TripleBean> controlList = new HashMap<String, TripleBean>();
 			for (TripleBean tripleBean : triples) {
 				if (tripleBean.getType().equals("literal")) {
-					if (controlList.get(tripleBean.getProperty().getProperty()) == null || preferredLanguage.equals(tripleBean.getLang())) {
+					if (controlList.get(tripleBean.getProperty().getProperty()) == null
+							|| preferredLanguage.equals(tripleBean.getLang())) {
 						controlList.put(tripleBean.getProperty().getProperty(), tripleBean);
 					}
 				}
@@ -324,7 +406,8 @@ public class ResourceBuilder {
 		return result;
 	}
 
-	public ResultBean buildHtmlInverseResource(String IRI, Locale locale, ConfigurationBean conf, OntologyBean ontoBean) throws Exception {
+	public ResultBean buildHtmlInverseResource(String IRI, Locale locale, ConfigurationBean conf, OntologyBean ontoBean)
+			throws Exception {
 		return buildHtmlInverseResource(IRI, null, -1, locale, conf, ontoBean);
 	}
 }

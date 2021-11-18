@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
 
@@ -15,6 +16,7 @@ import org.springframework.web.context.ServletContextAware;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
+import com.hp.hpl.jena.rdf.model.RDFList;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.ResIterator;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -92,8 +94,12 @@ public class ConfigurationBean implements ServletContextAware, Cloneable {
 		preferredLanguage = getSingleConfValue("preferredLanguage");
 
 		typeProperties = getMultiConfValue("typeProperties");
-		titleProperties = getMultiConfValue("titleProperties");
-		descriptionProperties = getMultiConfValue("descriptionProperties");
+		//titleProperties = getMultiConfValue("titleProperties");
+		titleProperties = getListConfValue("titleProperties");
+		//descriptionProperties = getMultiConfValue("descriptionProperties");
+		
+		descriptionProperties = getListConfValue("descriptionProperties");
+		
 		imageProperties = getMultiConfValue("imageProperties");
 		audioProperties = getMultiConfValue("audioProperties");
 		videoProperties = getMultiConfValue("videoProperties");
@@ -165,6 +171,21 @@ public class ConfigurationBean implements ServletContextAware, Cloneable {
 		}
 		return result;
 	}
+	
+	
+	private List<String> getListConfValue(String prop) {
+		List<String> result = new ArrayList<String>();
+		NodeIterator iter = confModel.listObjectsOfProperty(confModel.createProperty(confModel.getNsPrefixURI("conf"), prop));
+		// normally there is only one value
+		while (iter.hasNext()) {
+			RDFNode node = iter.next();
+			RDFList theList = node.as( RDFList.class );
+			result.addAll(theList.asJavaList().stream().map(n -> n.toString()).collect(Collectors.toList()));
+		}
+		return result;
+	}
+	
+	
 
 	@Override
 	public void setServletContext(ServletContext arg0) {
