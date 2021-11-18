@@ -61,11 +61,11 @@
 ##	installation on dbpedia domain should use <http://dbpedia.org/resource/> 
 	
 	conf:IRInamespace <http://dbpedia.org/resource/>  ;
-	
+
 ## 	EndPoint
 
 	conf:endpoint <http://dbpedia.org/sparql>;
-	#conf:endpointType "virtuoso"; 	## 	just "virtuoso" is handled right now, this will add some "rawdata" 
+	conf:endpointType "virtuoso"; 	## 	just "virtuoso" is handled right now, this will add some "rawdata" 
 									##	options in the footer, leave this blank if you don't want these links
 
 ########## give it a try opening http://localhost:8080/lodview/Rome
@@ -175,11 +175,6 @@
 ##	prefixes or not
 
 	conf:typeProperties			rdf:type;
-	
-	#conf:titleProperties		dc:title , dcterms:title, rdfs:label , <http://www.w3.org/2004/02/skos/core#prefLabel> , 
-	#							<http://www.w3.org/2008/05/skos-xl#prefLabel> , <http://www.w3.org/2009/08/skos-reference/skos.html#prefLabel> , 
-	#							gn:officialName , gn:name , rdf:value , foaf:surname , 
-	#<http://purl.org/collections/nl/am/title> , <http://xmlns.com/foaf/0.1/name>;  
 								
 	conf:titleProperties
 		(
@@ -250,4 +245,4 @@
 ##	<http://dbpedia.org/ontology/Work>		conf:hasColorPair	"#914848-#7d3e3e". 
 ##	<http://dbpedia.org/ontology/Organisation>	conf:hasColorPair	"#6d8058-#5e6f4c". 
 ##	<http://dbpedia.org/ontology/Event>	conf:hasColorPair	"#5b8a97-#4f7783". 
-##	<http://lodview.it/conf#otherClasses>	conf:hasColorPair	"#528775-#477565". 
+##	<http://lodview.it/conf#otherClasses>	conf:hasColorPair	"#528775-#477565".

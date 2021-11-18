@@ -70,7 +70,6 @@ public class ResourceBuilder {
 		}
 		boolean betterTitleMatch = false, betterDescrMatch = false;
 
-		// Sort Title
 		List<String> confTitleProperties = conf.getTitleProperties();
 		for (String readTitleConf : confTitleProperties) {
 			for (TripleBean tripleBean : triples) {
@@ -80,17 +79,15 @@ public class ResourceBuilder {
 					tripleBean.setNsIRI(Misc.toNsResource(tripleBean.getIRI(), conf));
 				}
 				
-				if (readTitleConf == tripleBean.getProperty().getNsProperty()
-						|| conf.getTitleProperties().contains(tripleBean.getProperty().getProperty())
-								
-						){
+				if (readTitleConf == tripleBean.getProperty().getNsProperty() || conf.getTitleProperties().contains(tripleBean.getProperty().getProperty())){
 						result.setTitle(Misc.stripHTML(tripleBean.getValue()));
-						if(preferredLanguage.equals(tripleBean.getLang())) { betterTitleMatch = true; }
+						if(preferredLanguage.equals(tripleBean.getLang())) { 
+							betterTitleMatch = true; 
+						}
 					}
 				}
 		}
 
-		// Sort Description
 		List<String> ConfDescriptionProperties = conf.getDescriptionProperties();
 		for (String readDescriptionConf : ConfDescriptionProperties) {
 			for (TripleBean tripleBean : triples) {
@@ -100,12 +97,7 @@ public class ResourceBuilder {
 					tripleBean.setNsIRI(Misc.toNsResource(tripleBean.getIRI(), conf));
 				}
 
-				if (
-						readDescriptionConf == tripleBean.getProperty().getNsProperty()
-						|| conf.getDescriptionProperties().contains(
-								tripleBean.getProperty().getProperty())
-								
-						){
+				if (readDescriptionConf == tripleBean.getProperty().getNsProperty() || conf.getDescriptionProperties().contains(tripleBean.getProperty().getProperty())){
 						result.setDescriptionProperty(tripleBean.getProperty());
 						if (preferredLanguage.equals(tripleBean.getLang())) {
 							betterDescrMatch = true;
@@ -113,8 +105,6 @@ public class ResourceBuilder {
 				}				
 			}
 		}
-		
-		
 		
 		
 		for (TripleBean tripleBean : triples) {

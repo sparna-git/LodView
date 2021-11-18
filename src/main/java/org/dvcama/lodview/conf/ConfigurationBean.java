@@ -94,9 +94,8 @@ public class ConfigurationBean implements ServletContextAware, Cloneable {
 		preferredLanguage = getSingleConfValue("preferredLanguage");
 
 		typeProperties = getMultiConfValue("typeProperties");
-		//titleProperties = getMultiConfValue("titleProperties");
+		
 		titleProperties = getListConfValue("titleProperties");
-		//descriptionProperties = getMultiConfValue("descriptionProperties");
 		
 		descriptionProperties = getListConfValue("descriptionProperties");
 		
@@ -176,7 +175,6 @@ public class ConfigurationBean implements ServletContextAware, Cloneable {
 	private List<String> getListConfValue(String prop) {
 		List<String> result = new ArrayList<String>();
 		NodeIterator iter = confModel.listObjectsOfProperty(confModel.createProperty(confModel.getNsPrefixURI("conf"), prop));
-		// normally there is only one value
 		while (iter.hasNext()) {
 			RDFNode node = iter.next();
 			RDFList theList = node.as( RDFList.class );
